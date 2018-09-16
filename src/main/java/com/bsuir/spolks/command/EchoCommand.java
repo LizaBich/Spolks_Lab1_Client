@@ -1,5 +1,7 @@
 package com.bsuir.spolks.command;
 
+import com.bsuir.spolks.connection.Connection;
+import com.bsuir.spolks.controller.Controller;
 import com.bsuir.spolks.exception.AvailableTokenNotPresentException;
 import com.bsuir.spolks.exception.WrongCommandFormatException;
 import com.bsuir.spolks.util.Printer;
@@ -74,10 +76,12 @@ class EchoCommand extends AbstractCommand {
     }
 
     private void executeEcho() {
-        // todo add connection
+        Connection connection = Controller.getInstance().getConnection();
 
         if (connection != null) {
-
+            if (connection.sendMessage(cmd)) {
+                connection.receive();
+            }
         } else {
             LOGGER.log(Level.WARN, "You're not connected to server.");
         }

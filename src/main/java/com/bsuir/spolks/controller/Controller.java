@@ -35,8 +35,11 @@ public final class Controller {
     private static ReentrantLock lock = new ReentrantLock();
 
     private Connection connection;
+    private InputManager keyboard;
 
-    private Controller() {}
+    private Controller() {
+        keyboard = new InputManager();
+    }
 
     /**
      * Get instance of controller.
@@ -94,5 +97,14 @@ public final class Controller {
      */
     public Connection getConnection() {
         return connection;
+    }
+
+    /**
+     * Get keyboard instance.
+     *
+     * @return keyboard
+     */
+    public InputManager getKeyboard() {
+        return keyboard;
     }
 }

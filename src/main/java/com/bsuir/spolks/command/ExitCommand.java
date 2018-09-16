@@ -1,5 +1,7 @@
 package com.bsuir.spolks.command;
 
+import com.bsuir.spolks.connection.Connection;
+import com.bsuir.spolks.controller.Controller;
 import com.bsuir.spolks.exception.AvailableTokenNotPresentException;
 import com.bsuir.spolks.exception.WrongCommandFormatException;
 import com.bsuir.spolks.util.Printer;
@@ -23,7 +25,7 @@ public class ExitCommand extends AbstractCommand {
             validateTokens();
             checkTokenCount();
 
-            // todo add connection
+            Connection connection = Controller.getInstance().getConnection();
             Map<String, String> toks = getTokens();
 
             if (toks.size() > 0) {
@@ -40,7 +42,7 @@ public class ExitCommand extends AbstractCommand {
                 }
             } else {
                 if (connection == null) {
-
+                    Controller.getInstance().getKeyboard().wantExit(true);
                 } else {
                     LOGGER.log(Level.WARN, "Connection is opened. Please, close connection to terminate program.");
                 }
@@ -67,11 +69,13 @@ public class ExitCommand extends AbstractCommand {
     }
 
     private void executeForceExit() {
-        // todo add connection
+        Connection connection = Controller.getInstance().getConnection();
 
         if (connection != null) {
             connection.close();
         }
+
+        Controller.getInstance().getKeyboard().wantExit(true);
     }
 
     private void executeHelp() {

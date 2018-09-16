@@ -1,5 +1,7 @@
 package com.bsuir.spolks.command;
 
+import com.bsuir.spolks.connection.Connection;
+import com.bsuir.spolks.controller.Controller;
 import com.bsuir.spolks.exception.AvailableTokenNotPresentException;
 import com.bsuir.spolks.exception.WrongCommandFormatException;
 import com.bsuir.spolks.util.Printer;
@@ -75,6 +77,11 @@ public class ConnectCommand extends AbstractCommand {
 
     private void executeConnect() {
         String address = getTokens().get(AvailableToken.IP.getName());
+        Connection connection = new Connection(address);
+
+        if (connection.connect()) {
+            Controller.getInstance().setConnection(connection);
+        }
     }
 
     private void executeHelp() {
