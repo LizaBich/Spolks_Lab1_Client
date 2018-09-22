@@ -5,6 +5,7 @@ import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -72,6 +73,7 @@ public class Connection {
             return false;
         }
     }
+
     /**
      * Send message to server.
      *
@@ -95,10 +97,7 @@ public class Connection {
         try {
             int countBytes = is.read(clientMessage);
 
-            String data = new String(clientMessage, 0, countBytes);
-            LOGGER.log(Level.INFO, "Server: " + data);
-
-            return data;
+            return new String(clientMessage, 0, countBytes);
         } catch (IOException e) {
             LOGGER.log(Level.ERROR, "Error: " + e.getMessage());
             return null;
@@ -121,6 +120,7 @@ public class Connection {
         try {
             is.close();
             os.close();
+            removeUUID();
 
             socket.close();
             Controller.getInstance().setConnection(null);
@@ -132,5 +132,15 @@ public class Connection {
     private void initStream() throws IOException {
         is = socket.getInputStream();
         os = socket.getOutputStream();
+    }
+
+    private void removeUUID() {
+        File storeID = new File("uuid.txt");
+        if (storeID.delete()) {
+            LOGGER.log(Level.INFO, "File with uuid is deleted!");
+        } else {
+            LOGGER.log(Level.WARN, "Delete operation is failed.");
+        }
+
     }
 }

@@ -7,13 +7,12 @@ import com.bsuir.spolks.exception.WrongCommandFormatException;
 import com.bsuir.spolks.util.Printer;
 import org.apache.logging.log4j.Level;
 
+import java.io.*;
 import java.util.Arrays;
 import java.util.Map;
+import java.util.UUID;
 
 public class ConnectCommand extends AbstractCommand {
-
-    public static final String SERVER_IP_REGEX = "^(\\d{1,3}\\.){3}\\d{1,3}$";
-
     ConnectCommand() {
         Arrays.stream(AvailableToken.values()).forEach(t -> availableTokens.put(t.getName(), t.getRegex()));
     }
@@ -78,9 +77,10 @@ public class ConnectCommand extends AbstractCommand {
     private void executeConnect() {
         String address = getTokens().get(AvailableToken.IP.getName());
         Connection connection = new Connection(address);
-
         if (connection.connect()) {
             Controller.getInstance().setConnection(connection);
+            connection = Controller.getInstance().getConnection();
+            connection.sendMessage(createUUID());
         }
     }
 
@@ -124,5 +124,36 @@ public class ConnectCommand extends AbstractCommand {
         public boolean isRequired() {
             return required;
         }
+    }
+
+    private String createUUID() {
+        File storeID = new File("uuid.txt");
+        if (storeID.exists()) {
+            try {
+                FileInputStream inputStream = new FileInputStream(storeID);
+                byte[] data = new byte[(int) storeID.length()];
+                inputStream.read(data);
+                inputStream.close();
+                return new String(data, "UTF-8");
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        } else {
+            String uniqueID = UUID.randomUUID().toString();
+            try {
+                storeID.createNewFile();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            try {
+                FileOutputStream outputStream = new FileOutputStream(storeID);
+                PrintStream outKey = new PrintStream(outputStream);
+                outKey.print(uniqueID);
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+            }
+            return uniqueID;
+        }
+        return null;
     }
 }

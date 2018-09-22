@@ -33,8 +33,6 @@ abstract class AbstractCommand implements ICommand {
      */
     @Override
     public final void verifyTokens() throws WrongCommandFormatException {
-        LOGGER.log(Level.DEBUG, "Tokens: " + tokens);
-
         if (!tokens.isEmpty()) {
             for (Map.Entry<String, String> fl : tokens.entrySet()) {
                 final String key = fl.getKey();

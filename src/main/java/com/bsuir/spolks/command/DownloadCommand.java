@@ -7,15 +7,17 @@ import com.bsuir.spolks.exception.WrongCommandFormatException;
 import com.bsuir.spolks.util.Printer;
 import org.apache.logging.log4j.Level;
 
+import java.io.DataOutputStream;
+import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Map;
 
 class DownloadCommand extends AbstractCommand {
+    private static long previousProgress = 0;
 
     private static final String SUCCESS = "success";
-    private static final String START_TRANSFER = "start";
 
     private static final int BUFF_SIZE = 12288;
 
@@ -98,44 +100,48 @@ class DownloadCommand extends AbstractCommand {
                     final long fileSize = Long.parseLong(confirmation[1]);
                     LOGGER.log(Level.INFO, "File size: " + fileSize + " bytes");
 
-                    if (connection.sendMessage(START_TRANSFER)) {
-                        long receivedBytes = 0;
-                        final long middleOfFileSize = fileSize / 2;
-                        boolean had50Percents = false;
+                    try {
+                        File file = new File(getTokens().get(AvailableToken.NAME.getName()));
+                        DataOutputStream dataOutputStream = new DataOutputStream(new FileOutputStream(file, true));
 
-                        try {
-                            FileOutputStream fos = new FileOutputStream(getTokens().get(AvailableToken.NAME.getName()));
+                        int progress = (int) file.length();
+                        connection.sendMessage(String.valueOf(progress));
+                        connection.sendMessage("true");
 
-                            byte[] buff = new byte[BUFF_SIZE];
-                            int count;
+                        long receivedBytes = progress;
+                        byte[] buff = new byte[BUFF_SIZE];
+                        int count;
+                        while ((count = connection.receive(buff)) != -1) {
+                            receivedBytes += count;
+                            dataOutputStream.write(Arrays.copyOfRange(buff, 0, count));
 
-                            while ((count = connection.receive(buff)) != -1) {
-                                receivedBytes += count;
-                                fos.write(Arrays.copyOfRange(buff, 0, count));
+                            getCurrentProgress(receivedBytes, fileSize);
 
-                                LOGGER.log(Level.DEBUG, "Received " + receivedBytes + " bytes.");
-                                Thread.sleep(4);
-
-                                if (receivedBytes == fileSize) {
-                                    break;
-                                }
-
-                                if (receivedBytes >= middleOfFileSize && !had50Percents) {
-                                    LOGGER.log(Level.INFO, "Received 50%...");
-                                    had50Percents = true;
-                                }
+                            if (receivedBytes == fileSize) {
+                                break;
+                            } else {
+                                connection.sendMessage("true");
                             }
-
-                            fos.close();
-                            LOGGER.log(Level.INFO, "File is downloaded. Total size: " + receivedBytes + " bytes.");
-                        } catch (IOException | InterruptedException e) {
-                            LOGGER.log(Level.ERROR, e.getMessage());
                         }
+
+                        dataOutputStream.close();
+                        LOGGER.log(Level.INFO, "File is downloaded. Total size: " + receivedBytes + " bytes.");
+                    } catch (IOException e) {
+                        LOGGER.log(Level.ERROR, e.getMessage());
                     }
                 }
             }
         } else {
             LOGGER.log(Level.WARN, "You're not connected to server.");
+        }
+    }
+
+
+    private void getCurrentProgress(long length, long size) {
+        long currentProgress = (length * 100 / size);
+        if (currentProgress % 1 == 0 && currentProgress != previousProgress) {
+            LOGGER.log(Level.INFO, "Progress: " + currentProgress + "%");
+            previousProgress = currentProgress;
         }
     }
 
