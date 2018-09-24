@@ -18,6 +18,7 @@ class DownloadCommand extends AbstractCommand {
     private static long previousProgress = 0;
 
     private static final String SUCCESS = "success";
+    private static final String GET_PROGRESS = "progress";
 
     private static final int BUFF_SIZE = 12288;
 
@@ -106,26 +107,30 @@ class DownloadCommand extends AbstractCommand {
 
                         int progress = (int) file.length();
                         connection.sendMessage(String.valueOf(progress));
-                        connection.sendMessage("true");
 
-                        long receivedBytes = progress;
-                        byte[] buff = new byte[BUFF_SIZE];
-                        int count;
-                        while ((count = connection.receive(buff)) != -1) {
-                            receivedBytes += count;
-                            dataOutputStream.write(Arrays.copyOfRange(buff, 0, count));
+                        if(connection.receive().equals(GET_PROGRESS)) {
+                            connection.sendMessage("true");
+                            long receivedBytes = progress;
+                            byte[] buff = new byte[BUFF_SIZE];
+                            int count;
+                            while ((count = connection.receive(buff)) != -1) {
+                                receivedBytes += count;
+                                dataOutputStream.write(Arrays.copyOfRange(buff, 0, count));
 
-                            getCurrentProgress(receivedBytes, fileSize);
+                                getCurrentProgress(receivedBytes, fileSize);
 
-                            if (receivedBytes == fileSize) {
-                                break;
-                            } else {
-                                connection.sendMessage("true");
+                                if (receivedBytes == fileSize) {
+                                    break;
+                                } else {
+                                    connection.sendMessage("true");
+                                }
                             }
-                        }
 
-                        dataOutputStream.close();
-                        LOGGER.log(Level.INFO, "File is downloaded. Total size: " + receivedBytes + " bytes.");
+                            dataOutputStream.close();
+                            LOGGER.log(Level.INFO, "File is downloaded. Total size: " + receivedBytes + " bytes.");
+                        } else {
+                            LOGGER.log(Level.ERROR, "Cannot receive flag to start download");
+                        }
                     } catch (IOException e) {
                         LOGGER.log(Level.ERROR, e.getMessage());
                     }
