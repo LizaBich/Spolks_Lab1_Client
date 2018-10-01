@@ -20,7 +20,7 @@ class DownloadCommand extends AbstractCommand {
     private static final String SUCCESS = "success";
     private static final String GET_PROGRESS = "progress";
 
-    private static final int BUFF_SIZE = 12288;
+    private static final int BUFF_SIZE = 65536;
 
     DownloadCommand() {
         Arrays.stream(AvailableToken.values()).forEach(t -> availableTokens.put(t.getName(), t.getRegex()));
@@ -110,8 +110,10 @@ class DownloadCommand extends AbstractCommand {
 
                         if(connection.receive().equals(GET_PROGRESS)) {
                             connection.sendMessage("true");
+
                             long receivedBytes = progress;
                             byte[] buff = new byte[BUFF_SIZE];
+
                             int count;
                             while ((count = connection.receive(buff)) != -1) {
                                 receivedBytes += count;
@@ -127,6 +129,8 @@ class DownloadCommand extends AbstractCommand {
                             }
 
                             dataOutputStream.close();
+
+                            System.out.println();
                             LOGGER.log(Level.INFO, "File is downloaded. Total size: " + receivedBytes + " bytes.");
                         } else {
                             LOGGER.log(Level.ERROR, "Cannot receive flag to start download");
@@ -145,7 +149,8 @@ class DownloadCommand extends AbstractCommand {
     private void getCurrentProgress(long length, long size) {
         long currentProgress = (length * 100 / size);
         if (currentProgress % 1 == 0 && currentProgress != previousProgress) {
-            LOGGER.log(Level.INFO, "Progress: " + currentProgress + "%");
+            System.out.print('\r');
+            System.out.print("Progress: " + currentProgress + "%");
             previousProgress = currentProgress;
         }
     }

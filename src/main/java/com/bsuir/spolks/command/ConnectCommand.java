@@ -79,8 +79,6 @@ public class ConnectCommand extends AbstractCommand {
         Connection connection = new Connection(address);
         if (connection.connect()) {
             Controller.getInstance().setConnection(connection);
-            connection = Controller.getInstance().getConnection();
-            connection.sendMessage(createUUID());
         }
     }
 

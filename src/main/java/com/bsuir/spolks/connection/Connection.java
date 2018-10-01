@@ -5,10 +5,7 @@ import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.*;
 import java.net.Socket;
 import java.net.SocketException;
 
@@ -19,8 +16,7 @@ public class Connection {
      */
     private static final Logger LOGGER = LogManager.getLogger();
 
-    private static final int SIZE_BUFF = 256;
-    private static final int PORT = 8888;
+    private static final int PORT = 9999;
 
     /**
      * Default serverIP of server.
@@ -29,18 +25,14 @@ public class Connection {
 
     private Socket socket;
 
-    private InputStream is;
-    private OutputStream os;
-
-    private byte clientMessage[];
+    private DataOutputStream os;
+    private DataInputStream is;
 
     /**
      * Default constructor.
      */
     private Connection() {
-        clientMessage = new byte[SIZE_BUFF];
     }
-
     /**
      * Constructor with server ip.
      *
@@ -82,7 +74,7 @@ public class Connection {
      */
     public boolean sendMessage(String data) {
         try {
-            os.write(data.getBytes());
+            os.writeUTF(data);
             return true;
         } catch (IOException e) {
             LOGGER.log(Level.ERROR, "Couldn't send message. " + e.getMessage());
@@ -95,9 +87,7 @@ public class Connection {
      */
     public String receive() {
         try {
-            int countBytes = is.read(clientMessage);
-
-            return new String(clientMessage, 0, countBytes);
+            return is.readUTF();
         } catch (IOException e) {
             LOGGER.log(Level.ERROR, "Error: " + e.getMessage());
             return null;
@@ -129,9 +119,14 @@ public class Connection {
         }
     }
 
+//    private void initStream() throws IOException {
+//        is = socket.getInputStream();
+//        os = socket.getOutputStream();
+//    }
+
     private void initStream() throws IOException {
-        is = socket.getInputStream();
-        os = socket.getOutputStream();
+        is = new DataInputStream(socket.getInputStream());
+        os = new DataOutputStream(socket.getOutputStream());
     }
 
     private void removeUUID() {
