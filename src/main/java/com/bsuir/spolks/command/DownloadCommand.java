@@ -11,7 +11,9 @@ import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 
 class DownloadCommand extends AbstractCommand {
@@ -108,6 +110,7 @@ class DownloadCommand extends AbstractCommand {
                         int progress = (int) file.length();
                         connection.sendMessage(String.valueOf(progress));
 
+                        List<Object> buffer = new ArrayList<>();
                         if(connection.receive().equals(GET_PROGRESS)) {
                             connection.sendMessage("true");
 
@@ -117,8 +120,8 @@ class DownloadCommand extends AbstractCommand {
                             int count;
                             while ((count = connection.receive(buff)) != -1) {
                                 receivedBytes += count;
-                                dataOutputStream.write(Arrays.copyOfRange(buff, 0, count));
-
+//                                dataOutputStream.write(buff, 0, count);
+                                buffer.add(Arrays.copyOfRange(buff, 0, count));
                                 getCurrentProgress(receivedBytes, fileSize);
 
                                 if (receivedBytes == fileSize) {
@@ -128,6 +131,11 @@ class DownloadCommand extends AbstractCommand {
                                 }
                             }
 
+                            byte[] item;
+                            for(int i = 0; i < buffer.size(); i++) {
+                                item = (byte[]) buffer.get(i);
+                                dataOutputStream.write(item, 0, item.length);
+                            }
                             dataOutputStream.close();
 
                             System.out.println();

@@ -119,10 +119,6 @@ public class Connection {
         }
     }
 
-//    private void initStream() throws IOException {
-//        is = socket.getInputStream();
-//        os = socket.getOutputStream();
-//    }
 
     private void initStream() throws IOException {
         is = new DataInputStream(socket.getInputStream());
