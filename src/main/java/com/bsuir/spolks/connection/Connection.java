@@ -76,6 +76,11 @@ public class Connection {
         try {
             os.writeUTF(data);
             return true;
+        } catch (SocketException e) {
+            System.out.println();
+            LOGGER.log(Level.ERROR, e.getMessage());
+            System.exit(0);
+            return  false;
         } catch (IOException e) {
             LOGGER.log(Level.ERROR, "Couldn't send message. " + e.getMessage());
             return false;
@@ -88,6 +93,11 @@ public class Connection {
     public String receive() {
         try {
             return is.readUTF();
+        } catch (SocketException e) {
+            System.out.println();
+            LOGGER.log(Level.ERROR, e.getMessage());
+            System.exit(0);
+            return  null;
         } catch (IOException e) {
             LOGGER.log(Level.ERROR, "Error: " + e.getMessage());
             return null;
@@ -97,6 +107,11 @@ public class Connection {
     public int receive(byte[] buffer) {
         try {
             return is.read(buffer);
+        } catch (SocketException e) {
+            System.out.println();
+            LOGGER.log(Level.ERROR, e.getMessage());
+            System.exit(0);
+            return  0;
         } catch (IOException e) {
             LOGGER.log(Level.ERROR, "Error: " + e.getMessage());
             return 0;

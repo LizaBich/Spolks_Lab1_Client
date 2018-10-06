@@ -112,7 +112,6 @@ class DownloadCommand extends AbstractCommand {
 
                         List<Object> buffer = new ArrayList<>();
                         if(connection.receive().equals(GET_PROGRESS)) {
-                            connection.sendMessage("true");
 
                             long receivedBytes = progress;
                             byte[] buff = new byte[BUFF_SIZE];
@@ -120,22 +119,20 @@ class DownloadCommand extends AbstractCommand {
                             int count;
                             while ((count = connection.receive(buff)) != -1) {
                                 receivedBytes += count;
-//                                dataOutputStream.write(buff, 0, count);
-                                buffer.add(Arrays.copyOfRange(buff, 0, count));
+                                dataOutputStream.write(buff, 0, count);
+//                                buffer.add(Arrays.copyOfRange(buff, 0, count));
                                 getCurrentProgress(receivedBytes, fileSize);
 
                                 if (receivedBytes == fileSize) {
                                     break;
-                                } else {
-                                    connection.sendMessage("true");
                                 }
                             }
-
-                            byte[] item;
-                            for(int i = 0; i < buffer.size(); i++) {
-                                item = (byte[]) buffer.get(i);
-                                dataOutputStream.write(item, 0, item.length);
-                            }
+//
+//                            byte[] item;
+//                            for(int i = 0; i < buffer.size(); i++) {
+//                                item = (byte[]) buffer.get(i);
+//                                dataOutputStream.write(item, 0, item.length);
+//                            }
                             dataOutputStream.close();
 
                             System.out.println();
