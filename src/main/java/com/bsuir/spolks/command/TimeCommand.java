@@ -43,8 +43,8 @@ class TimeCommand extends AbstractCommand {
     }
 
     private void executeGettingTime(Connection connection) {
-        if(connection.sendMessage(cmd)) {
-            String time = connection.receive();
+        if(connection.sendBytes(cmd)) {
+            String time = connection.receiveBytes();
             LOGGER.log(Level.INFO, "Server time: " + time);
         } else {
             LOGGER.log(Level.ERROR, "Cannot get server time...");

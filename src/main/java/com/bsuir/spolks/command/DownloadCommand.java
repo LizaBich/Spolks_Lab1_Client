@@ -11,9 +11,7 @@ import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 import java.util.Map;
 
 class DownloadCommand extends AbstractCommand {
@@ -22,7 +20,7 @@ class DownloadCommand extends AbstractCommand {
     private static final String SUCCESS = "success";
     private static final String GET_PROGRESS = "progress";
 
-    private static final int BUFF_SIZE = 65536;
+    private static final int BUFF_SIZE = 65000;
 
     DownloadCommand() {
         Arrays.stream(AvailableToken.values()).forEach(t -> availableTokens.put(t.getName(), t.getRegex()));
@@ -96,8 +94,8 @@ class DownloadCommand extends AbstractCommand {
         Connection connection = Controller.getInstance().getConnection();
 
         if (connection != null) {
-            if (connection.sendMessage(cmd)) {
-                String[] confirmation = connection.receive().split(" ");
+            if (connection.sendBytes(cmd)) {
+                String[] confirmation = connection.receiveBytes().split(" ");
 
                 if (SUCCESS.equals(confirmation[0])) {
                     final long fileSize = Long.parseLong(confirmation[1]);
@@ -108,11 +106,9 @@ class DownloadCommand extends AbstractCommand {
                         DataOutputStream dataOutputStream = new DataOutputStream(new FileOutputStream(file, true));
 
                         int progress = (int) file.length();
-                        connection.sendMessage(String.valueOf(progress));
+                        connection.sendBytes(String.valueOf(progress));
 
-                        List<Object> buffer = new ArrayList<>();
-                        if(connection.receive().equals(GET_PROGRESS)) {
-
+                        if(connection.receiveBytes().equals(GET_PROGRESS)) {
                             long receivedBytes = progress;
                             byte[] buff = new byte[BUFF_SIZE];
 
@@ -120,25 +116,17 @@ class DownloadCommand extends AbstractCommand {
                             while ((count = connection.receive(buff)) != -1) {
                                 receivedBytes += count;
                                 dataOutputStream.write(buff, 0, count);
-//                                buffer.add(Arrays.copyOfRange(buff, 0, count));
                                 getCurrentProgress(receivedBytes, fileSize);
 
+                                buff = new byte[BUFF_SIZE];
+
                                 if (receivedBytes == fileSize) {
+                                    System.out.println();
+                                    LOGGER.log(Level.INFO, "File is downloaded. Total size: " + receivedBytes + " bytes.");
                                     break;
                                 }
                             }
-//
-//                            byte[] item;
-//                            for(int i = 0; i < buffer.size(); i++) {
-//                                item = (byte[]) buffer.get(i);
-//                                dataOutputStream.write(item, 0, item.length);
-//                            }
                             dataOutputStream.close();
-
-                            System.out.println();
-                            LOGGER.log(Level.INFO, "File is downloaded. Total size: " + receivedBytes + " bytes.");
-                        } else {
-                            LOGGER.log(Level.ERROR, "Cannot receive flag to start download");
                         }
                     } catch (IOException e) {
                         LOGGER.log(Level.ERROR, e.getMessage());

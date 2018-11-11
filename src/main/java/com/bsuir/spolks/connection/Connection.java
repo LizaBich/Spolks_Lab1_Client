@@ -18,6 +18,7 @@ public class Connection {
 
     private static final int PORT = 9999;
 
+    private static final int SIZE_BUFF = 65000;
     /**
      * Default serverIP of server.
      */
@@ -27,11 +28,12 @@ public class Connection {
 
     private DataOutputStream os;
     private DataInputStream is;
-
+    private byte clientMessage[];
     /**
      * Default constructor.
      */
     private Connection() {
+        clientMessage = new byte[SIZE_BUFF];
     }
     /**
      * Constructor with server ip.
@@ -66,42 +68,32 @@ public class Connection {
         }
     }
 
-    /**
-     * Send message to server.
-     *
-     * @param data message to server
-     * @return boolean
-     */
-    public boolean sendMessage(String data) {
-        try {
-            os.writeUTF(data);
+    public boolean sendBytes(String data) {
+        try{
+            os.writeBytes(data);
             return true;
-        } catch (SocketException e) {
-            System.out.println();
-            LOGGER.log(Level.ERROR, e.getMessage());
-            System.exit(0);
-            return  false;
+
         } catch (IOException e) {
             LOGGER.log(Level.ERROR, "Couldn't send message. " + e.getMessage());
             return false;
         }
     }
-
     /**
      * Receive message from server.
      */
-    public String receive() {
+
+    public String receiveBytes() {
+        int countBytes;
         try {
-            return is.readUTF();
-        } catch (SocketException e) {
-            System.out.println();
-            LOGGER.log(Level.ERROR, e.getMessage());
-            System.exit(0);
-            return  null;
+            countBytes = is.read(clientMessage);
+            String data = new String(clientMessage, 0, countBytes);
+            LOGGER.log(Level.INFO, "Server: " + data);
+            return data;
         } catch (IOException e) {
             LOGGER.log(Level.ERROR, "Error: " + e.getMessage());
-            return null;
+            return  null;
         }
+
     }
 
     public int receive(byte[] buffer) {
@@ -125,7 +117,6 @@ public class Connection {
         try {
             is.close();
             os.close();
-            removeUUID();
 
             socket.close();
             Controller.getInstance().setConnection(null);
@@ -138,15 +129,5 @@ public class Connection {
     private void initStream() throws IOException {
         is = new DataInputStream(socket.getInputStream());
         os = new DataOutputStream(socket.getOutputStream());
-    }
-
-    private void removeUUID() {
-        File storeID = new File("uuid.txt");
-        if (storeID.delete()) {
-            LOGGER.log(Level.INFO, "File with uuid is deleted!");
-        } else {
-            LOGGER.log(Level.WARN, "Delete operation is failed.");
-        }
-
     }
 }

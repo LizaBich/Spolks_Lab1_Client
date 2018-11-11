@@ -79,8 +79,8 @@ class EchoCommand extends AbstractCommand {
         Connection connection = Controller.getInstance().getConnection();
 
         if (connection != null) {
-            if (connection.sendMessage(cmd)) {
-                LOGGER.log(Level.INFO, "Server: " + connection.receive());
+            if (connection.sendBytes(cmd)) {
+                LOGGER.log(Level.INFO, "Server message: " +   connection.receiveBytes());
             }
         } else {
             LOGGER.log(Level.WARN, "You're not connected to server.");
